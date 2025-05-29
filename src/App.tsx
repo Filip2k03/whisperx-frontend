@@ -6,11 +6,11 @@ import Courses from "./pages/Courses";
 import Prompts from "./pages/Prompts";
 import BuyToken from "./pages/BuyToken";
 import Profile from "./pages/Profile";
-
 import Layout from "./components/Layout";
 import ProtectedLayout from "./components/ProtectedLayout";
 
 
+import { Analytics } from "@vercel/analytics/next";
 function App() {
   return (
     <Routes>

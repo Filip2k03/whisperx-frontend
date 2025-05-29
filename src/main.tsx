@@ -4,7 +4,7 @@ import App from "./App";
 import { BrowserRouter } from "react-router-dom";
 import { ToastProvider } from "./components/ToastProvider";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
-import { Analytics } from "@vercel/analytics/next"
+
 
 // Define the dark mode state and theme here, similar to how you had it in App.js
 // This ensures the theme is available to the entire application.
