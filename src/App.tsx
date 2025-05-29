@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import Layout from "./components/Layout";
 import ProtectedLayout from "./components/ProtectedLayout";
 
+
 function App() {
   return (
     <Routes>
