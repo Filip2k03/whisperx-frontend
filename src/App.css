@@ -49,3 +49,11 @@
   padding: 10px;
   border: 1px solid #ddd;
 }
+
+/* Make ad responsive */
+@media (max-width: 768px) {
+  .ad-container {
+    width: 100%;
+    height: auto;
+  }
+}
