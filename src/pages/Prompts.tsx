@@ -10,9 +10,23 @@ import API from "../api/api";
 
 const promptCategories = ["All", "ChatGPT", "DALL·E", "MidJourney", "Claude", "Copilot"];
 
+// PDF Button Component
+const PDFPreviewButton = ({ url }: { url: string }) => (
+  <a
+    href={url.startsWith("http") ? url : `${API}/${url}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{ textDecoration: "none" }}
+  >
+    <Typography color="primary" fontWeight="bold">
+      📄 View PDF
+    </Typography>
+  </a>
+);
+
 const Prompts = () => {
-  const [prompts, setPrompts] = useState([]);
-  const [filtered, setFiltered] = useState([]);
+  const [prompts, setPrompts] = useState<any[]>([]);
+  const [filtered, setFiltered] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -23,7 +37,8 @@ const Prompts = () => {
       .then((data) => {
         setPrompts(data);
         setFiltered(data);
-      });
+      })
+      .catch((err) => console.error("Failed to fetch prompts:", err));
   }, []);
 
   useEffect(() => {
@@ -73,8 +88,10 @@ const Prompts = () => {
           <Typography variant="body2" color="text.secondary">
             {p.category}
           </Typography>
-          <Typography variant="body1">Points: {p.points_required}</Typography>
-          {user.points >= p.points_required ? (
+          <Typography variant="body1" mb={1}>
+            Points: {p.points_required}
+          </Typography>
+          {(user.points || 0) >= p.points_required ? (
             <PDFPreviewButton url={p.pdf_link} />
           ) : (
             <Typography color="error">Not enough points</Typography>
