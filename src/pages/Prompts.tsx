@@ -5,54 +5,66 @@ import {
   Paper,
   TextField,
   MenuItem,
+  Button,
 } from "@mui/material";
 import API from "../api/api";
+import { toast } from "react-toastify";
 
 const promptCategories = ["All", "ChatGPT", "DALL·E", "MidJourney", "Claude", "Copilot"];
-
-// PDF Button Component
-const PDFPreviewButton = ({ url }: { url: string }) => (
-  <a
-    href={url.startsWith("http") ? url : `${API}/${url}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    style={{ textDecoration: "none" }}
-  >
-    <Typography color="primary" fontWeight="bold">
-      📄 View PDF
-    </Typography>
-  </a>
-);
 
 const Prompts = () => {
   const [prompts, setPrompts] = useState<any[]>([]);
   const [filtered, setFiltered] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [user, setUser] = useState<any>(JSON.parse(localStorage.getItem("user") || "{}"));
 
+  // Fetch all prompts on load
   useEffect(() => {
     fetch(`${API}/get_prompts.php`)
       .then((res) => res.json())
       .then((data) => {
         setPrompts(data);
         setFiltered(data);
-      })
-      .catch((err) => console.error("Failed to fetch prompts:", err));
+      });
   }, []);
 
+  // Filter by search and category
   useEffect(() => {
     let results = prompts;
     if (category !== "All") {
-      results = results.filter((p: any) => p.category === category);
+      results = results.filter((p) => p.category === category);
     }
     if (search) {
-      results = results.filter((p: any) =>
+      results = results.filter((p) =>
         p.title.toLowerCase().includes(search.toLowerCase())
       );
     }
     setFiltered(results);
   }, [search, category, prompts]);
+
+  // Handle viewing a prompt
+  const handleViewPrompt = async (promptId: number) => {
+    try {
+      const res = await fetch(`${API}/view_prompt.php?id=${promptId}`);
+      const data = await res.json();
+
+      if (data.success) {
+        // Open PDF
+        window.open(`${API}/${data.pdf_link}`, "_blank");
+
+        // Update user points in localStorage and state
+        const updatedUser = { ...user, points: data.new_points };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      } else {
+        toast.error(data.error || "Not enough points.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to view prompt.");
+    }
+  };
 
   return (
     <Box sx={{ p: 4 }}>
@@ -82,19 +94,33 @@ const Prompts = () => {
         </TextField>
       </Box>
 
-      {filtered.map((p: any) => (
+      <Typography variant="subtitle1" mb={2}>
+        Your Points: {user.points}
+      </Typography>
+
+      {filtered.map((p) => (
         <Paper key={p.id} sx={{ p: 2, mb: 2 }}>
           <Typography variant="h6">{p.title}</Typography>
           <Typography variant="body2" color="text.secondary">
             {p.category}
           </Typography>
-          <Typography variant="body1" mb={1}>
-            Points: {p.points_required}
-          </Typography>
-          {(user.points || 0) >= p.points_required ? (
-            <PDFPreviewButton url={p.pdf_link} />
+          <Typography variant="body1">Points Required: {p.points_required}</Typography>
+
+          {p.points_required === 0 ? (
+            <Button
+              variant="outlined"
+              onClick={() => window.open(`${API}/${p.pdf_link}`, "_blank")}
+            >
+              View Free Prompt
+            </Button>
+          ) : user.points >= p.points_required ? (
+            <Button variant="contained" color="primary" onClick={() => handleViewPrompt(p.id)}>
+              Use {p.points_required} Points
+            </Button>
           ) : (
-            <Typography color="error">Not enough points</Typography>
+            <Typography color="error" mt={1}>
+              Not enough points to view this prompt.
+            </Typography>
           )}
         </Paper>
       ))}
