@@ -4,15 +4,15 @@ import {
   Paper,
   Button,
   Divider,
-  Grid, // Import Grid for layout
-  Card, // Import Card for section showcase
+  Grid,
+  Card,
   CardContent,
   CardActions,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import API from "../api/api";
 import { useNavigate } from "react-router-dom";
-
+import { ThemeToggle } from "../theme/ThemeToggle";
 import { useToast } from "../components/ToastProvider";
 
 // Define a type for AI tool categories for better organization
@@ -27,24 +27,24 @@ interface AiToolCategory {
 const aiToolCategories: AiToolCategory[] = [
   {
     id: "chat-ai",
-    title: "AI Chat",
-    description: "Engage in intelligent conversations with various AI models.",
-    path: "/ai-chat", // This will be the route for the ChatAi component
-    buttonText: "Go to AI Chat",
+    title: "AI Chat & General Tools", // Renamed title to reflect its broader scope
+    description: "Explore a comprehensive library of AI chat models and general AI tools.",
+    path: "/ai-chat", // This will be the route for the ChatAi component (still the general explorer)
+    buttonText: "Explore All AI Tools",
   },
   {
     id: "video-ai",
     title: "AI for Video",
-    description: "Generate and edit videos with cutting-edge AI capabilities.",
-    path: "/ai-video", // Placeholder for AI Video page
-    buttonText: "Go to AI Video",
+    description: "Generate, edit, and enhance videos with powerful AI capabilities.",
+    path: "/ai-video", // Link to the new AI Video page
+    buttonText: "Go to AI Video Tools",
   },
   {
     id: "music-ai",
-    title: "AI for Music",
-    description: "Create unique melodies, soundtracks, and audio effects.",
-    path: "/ai-music", // Placeholder for AI Music page
-    buttonText: "Go to AI Music",
+    title: "AI for Music & Audio",
+    description: "Create unique melodies, soundtracks, and process audio with AI.",
+    path: "/ai-music", // Link to the new AI Music page
+    buttonText: "Go to AI Music & Audio Tools",
   },
   // You can add more categories here
 ];
@@ -58,19 +58,14 @@ const Dashboard = () => {
     const stored = localStorage.getItem("user");
     if (stored) {
       const parsed = JSON.parse(stored);
-      // It's good practice to fetch updated user data, but ensure your get_user.php
-      // is secured and only returns necessary info (no passwords etc.)
       try {
         const res = await fetch(`${API}/get_user.php?id=${parsed.id}`);
         const data = await res.json();
         if (!data.error) {
           setUser(data);
-          localStorage.setItem("user", JSON.stringify(data)); // refresh local
+          localStorage.setItem("user", JSON.stringify(data));
         } else {
           toast.showToast(data.error, "error");
-          // Optionally, if user not found, clear localStorage and navigate to login
-          // localStorage.removeItem("user");
-          // navigate("/login");
         }
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -85,9 +80,9 @@ const Dashboard = () => {
       navigate("/login");
     } else {
       setUser(JSON.parse(stored));
-      fetchUser(); // Fetch latest user data on component mount
+      fetchUser();
     }
-  }, [navigate]); // Added navigate to dependency array
+  }, [navigate]);
 
   const logout = () => {
     localStorage.removeItem("user");
@@ -101,6 +96,7 @@ const Dashboard = () => {
         <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#333' }}>
           👋 Welcome, {user?.username || "Guest"}
         </Typography>
+        {/* ThemeToggle is now in Layout.tsx */}
       </Box>
 
       {/* Account Info Card */}
