@@ -60,6 +60,7 @@
 
 /* Ad container specific styles */
 .ad-container {
+  display: hidden; /* Hide by default */
   margin: 40px auto; /* More margin */
   padding: 25px; /* More padding */
   border: 1px solid var(--border-color);
