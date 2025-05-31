@@ -8,144 +8,267 @@ import {
   Card,
   CardContent,
   CardActions,
+  Link as MuiLink, // Alias Link to avoid conflict with react-router-dom Link if imported
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import API from "../api/api";
 import { useNavigate } from "react-router-dom";
-import { ThemeToggle } from "../theme/ThemeToggle";
 import { useToast } from "../components/ToastProvider";
 
-// Define a type for AI tool categories for better organization
+// Define types for better readability and type safety
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  birthday: string;
+  role: string;
+  points: number;
+}
+
 interface AiToolCategory {
   id: string;
   title: string;
   description: string;
-  path: string; // The route to navigate to
+  path: string;
   buttonText: string;
 }
 
+interface NewsArticle {
+  id: string;
+  title: string;
+  snippet: string;
+  source: string;
+  link: string;
+}
+
+// Dummy data for AI Tool Categories
 const aiToolCategories: AiToolCategory[] = [
   {
     id: "chat-ai",
-    title: "AI Chat & General Tools", // Renamed title to reflect its broader scope
+    title: "AI Chat & General Tools",
     description: "Explore a comprehensive library of AI chat models and general AI tools.",
-    path: "/ai-chat", // This will be the route for the ChatAi component (still the general explorer)
+    path: "/ai-chat",
     buttonText: "Explore All AI Tools",
   },
   {
     id: "video-ai",
     title: "AI for Video",
     description: "Generate, edit, and enhance videos with powerful AI capabilities.",
-    path: "/ai-video", // Link to the new AI Video page
+    path: "/ai-video",
     buttonText: "Go to AI Video Tools",
   },
   {
     id: "music-ai",
     title: "AI for Music & Audio",
     description: "Create unique melodies, soundtracks, and process audio with AI.",
-    path: "/ai-music", // Link to the new AI Music page
+    path: "/ai-music",
     buttonText: "Go to AI Music & Audio Tools",
   },
-  // You can add more categories here
+];
+
+// Dummy data for Trending AI Buzzwords
+const trendingAiBuzzwords = [
+  "Generative AI", "Large Language Models", "AI Ethics", "Computer Vision",
+  "Natural Language Processing", "Machine Learning Ops", "Reinforcement Learning",
+  "Deep Learning", "AI in Healthcare", "Autonomous Systems", "Edge AI",
+  "AI for Creativity", "Explainable AI", "Federated Learning"
+];
+
+// Dummy data for Latest AI News
+const latestAiNews: NewsArticle[] = [
+  {
+    id: "news1",
+    title: "New Breakthrough in AI Drug Discovery",
+    snippet: "Researchers announce a significant leap in using AI to identify potential drug candidates faster than ever before.",
+    source: "Nature AI",
+    link: "https://example.com/news1", // Replace with actual news links
+  },
+  {
+    id: "news2",
+    title: "AI Models Now Generating Hyper-Realistic Video",
+    snippet: "The latest AI video generation models are producing stunningly realistic and coherent video clips, blurring lines with reality.",
+    source: "TechCrunch",
+    link: "https://example.com/news2",
+  },
+  {
+    id: "news3",
+    title: "Ethical Concerns Rise with AI's Rapid Advancement",
+    snippet: "As AI capabilities grow, experts are calling for more robust ethical guidelines and regulations to ensure responsible development.",
+    source: "AI Policy Review",
+    link: "https://example.com/news3",
+  },
 ];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const toast = useToast();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [currentBuzzwordIndex, setCurrentBuzzwordIndex] = useState(0);
 
-  const fetchUser = async () => {
+  // Effect for the trending AI buzzwords rotator
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBuzzwordIndex((prevIndex) =>
+        (prevIndex + 1) % trendingAiBuzzwords.length
+      );
+    }, 3000); // Change word every 3 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  // Effect to load user from localStorage on component mount
+  useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
-      const parsed = JSON.parse(stored);
-      try {
-        const res = await fetch(`${API}/get_user.php?id=${parsed.id}`);
-        const data = await res.json();
-        if (!data.error) {
-          setUser(data);
-          localStorage.setItem("user", JSON.stringify(data));
-        } else {
-          toast.showToast(data.error, "error");
-        }
-      } catch (error) {
-        console.error("Failed to fetch user data:", error);
-        toast.showToast("Failed to load user data.", "error");
+      const parsedUser = JSON.parse(stored);
+      setUser(parsedUser);
+      // Fetch fresh user data if logged in
+      fetchUser(parsedUser.id);
+    } else {
+      setUser(null); // Ensure user is null if not logged in
+    }
+  }, []);
+
+  // Function to fetch user data (only if user ID is provided)
+  const fetchUser = async (userId: string) => {
+    try {
+      const res = await fetch(`${API}/get_user.php?id=${userId}`);
+      const data = await res.json();
+      if (!data.error) {
+        setUser(data);
+        localStorage.setItem("user", JSON.stringify(data)); // Refresh local storage
+      } else {
+        toast.showToast(data.error, "error");
+        localStorage.removeItem("user");
+        setUser(null);
       }
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+      toast.showToast("Failed to load user data.", "error");
     }
   };
 
-  useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (!stored) {
-      navigate("/login");
-    } else {
-      setUser(JSON.parse(stored));
-      fetchUser();
-    }
-  }, [navigate]);
-
   const logout = () => {
     localStorage.removeItem("user");
+    setUser(null); // Clear user state
     navigate("/login");
     toast.showToast("Logged out successfully", "info");
   };
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#333' }}>
-          👋 Welcome, {user?.username || "Guest"}
+    <Box sx={{ p: 4, maxWidth: 1200, margin: '0 auto' }}>
+      {/* Welcome and Trending AI Buzzwords */}
+      <Paper elevation={4} sx={{ p: 4, mb: 4, borderRadius: '16px', background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)', color: 'white', overflow: 'hidden' }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+          👋 Welcome, {user?.username || "Guest"}!
         </Typography>
-        {/* ThemeToggle is now in Layout.tsx */}
-      </Box>
-
-      {/* Account Info Card */}
-      <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: '12px' }}>
-        <Typography variant="h6" sx={{ mb: 2, color: '#555' }}>
-          🧾 Account Info
+        <Typography variant="h5" sx={{ fontWeight: 'light', mb: 2 }}>
+          Your Hub for AI Innovation
         </Typography>
-        <Divider sx={{ my: 2 }} />
-        <Typography><strong>Email:</strong> {user?.email || 'N/A'}</Typography>
-        <Typography><strong>Birthday:</strong> {user?.birthday || 'N/A'}</Typography>
-        <Typography><strong>Role:</strong> {user?.role || 'user'}</Typography>
-      </Paper>
-
-      {/* Points Card */}
-      <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: '12px' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6" sx={{ color: '#555' }}>
-            💰 Your Points
-          </Typography>
-          <Button
-            variant="outlined"
-            onClick={fetchUser}
+        <Box sx={{ height: '30px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Typography
+            variant="h6"
             sx={{
-              borderColor: '#1976d2',
-              color: '#1976d2',
-              '&:hover': { borderColor: '#1565c0', color: '#1565c0' },
-              borderRadius: '8px'
+              fontWeight: 'medium',
+              animation: `slide-up 0.5s ease-out forwards`,
+              '@keyframes slide-up': {
+                '0%': { transform: 'translateY(100%)', opacity: 0 },
+                '100%': { transform: 'translateY(0)', opacity: 1 },
+              },
+              // Reset animation on index change to re-trigger
+              animationIterationCount: 1,
+              animationFillMode: 'forwards',
+              animationName: currentBuzzwordIndex !== 0 ? 'slide-up' : 'none', // Only animate after first render
             }}
+            key={currentBuzzwordIndex} // Key change forces re-render and animation
           >
-            🔄 Refresh
-          </Button>
+            {trendingAiBuzzwords[currentBuzzwordIndex]}
+          </Typography>
         </Box>
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#4CAF50' }}>
-          {user?.points || 0} pts
-        </Typography>
-        <Button
-            variant="contained"
-            onClick={() => navigate("/buy-token")}
-            sx={{ mt: 2, backgroundColor: '#FF9800', '&:hover': { backgroundColor: '#FB8C00' }, borderRadius: '8px' }}
-        >
-            Buy More Tokens
-        </Button>
       </Paper>
 
+      {/* Account Info & Points / Login/Register Prompt */}
+      <Grid container spacing={3} mb={4}>
+        <Grid item xs={12} md={6}>
+          {user ? (
+            <Paper elevation={3} sx={{ p: 3, height: '100%', borderRadius: '12px' }}>
+              <Typography variant="h6" sx={{ mb: 2, color: '#555' }}>
+                🧾 Your Account Info
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography><strong>Email:</strong> {user.email || 'N/A'}</Typography>
+              <Typography><strong>Birthday:</strong> {user.birthday || 'N/A'}</Typography>
+              <Typography><strong>Role:</strong> {user.role || 'user'}</Typography>
+            </Paper>
+          ) : (
+            <Paper elevation={3} sx={{ p: 3, height: '100%', borderRadius: '12px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography variant="h6" sx={{ mb: 2, color: '#555' }}>
+                Access Your Account
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                Log in to manage your profile, view points, and access exclusive content!
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                <Button variant="contained" onClick={() => navigate("/login")}>
+                  Login
+                </Button>
+                <Button variant="outlined" onClick={() => navigate("/register")}>
+                  Register
+                </Button>
+              </Box>
+            </Paper>
+          )}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {user ? (
+            <Paper elevation={3} sx={{ p: 3, height: '100%', borderRadius: '12px' }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6" sx={{ color: '#555' }}>
+                  💰 Your Points
+                </Typography>
+                <Button
+                  variant="outlined"
+                  onClick={() => user?.id && fetchUser(user.id)}
+                  sx={{
+                    borderColor: '#1976d2',
+                    color: '#1976d2',
+                    '&:hover': { borderColor: '#1565c0', color: '#1565c0' },
+                    borderRadius: '8px'
+                  }}
+                >
+                  🔄 Refresh
+                </Button>
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#4CAF50' }}>
+                {user.points || 0} pts
+              </Typography>
+              <Button
+                  variant="contained"
+                  onClick={() => navigate("/buy-token")}
+                  sx={{ mt: 2, backgroundColor: '#FF9800', '&:hover': { backgroundColor: '#FB8C00' }, borderRadius: '8px' }}
+              >
+                  Buy More Tokens
+              </Button>
+            </Paper>
+          ) : (
+            <Paper elevation={3} sx={{ p: 3, height: '100%', borderRadius: '12px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography variant="h6" sx={{ mb: 2, color: '#555' }}>
+                Earn & Use Points
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                Log in to earn points and use them to unlock premium prompts and courses!
+              </Typography>
+              <Button variant="contained" onClick={() => navigate("/buy-token")}>
+                Buy Tokens
+              </Button>
+            </Paper>
+          )}
+        </Grid>
+      </Grid>
+
+      {/* Explore AI Tools */}
       <Typography variant="h5" sx={{ mt: 5, mb: 3, fontWeight: 'bold', color: '#333' }}>
         🚀 Explore AI Tools
       </Typography>
-
-      {/* AI Tool Categories Showcase */}
       <Grid container spacing={3}>
         {aiToolCategories.map((category) => (
           <Grid item xs={12} sm={6} md={4} key={category.id}>
@@ -192,21 +315,101 @@ const Dashboard = () => {
         ))}
       </Grid>
 
-      {/* Logout Button */}
-      <Box mt={6} sx={{ textAlign: 'center' }}>
+      {/* Latest AI News */}
+      <Typography variant="h5" sx={{ mt: 6, mb: 3, fontWeight: 'bold', color: '#333' }}>
+        📰 Latest AI News
+      </Typography>
+      <Grid container spacing={3}>
+        {latestAiNews.map((article) => (
+          <Grid item xs={12} sm={6} md={4} key={article.id}>
+            <Card
+              elevation={3}
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                borderRadius: '12px',
+                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 6px 12px rgba(0,0,0,0.15)',
+                }
+              }}
+            >
+              <CardContent>
+                <Typography gutterBottom variant="h6" component="div" sx={{ color: '#3f51b5', fontWeight: 'bold' }}>
+                  {article.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ minHeight: '60px' }}>
+                  {article.snippet}
+                </Typography>
+                <Typography variant="caption" color="text.disabled" sx={{ mt: 1, display: 'block' }}>
+                  Source: {article.source}
+                </Typography>
+              </CardContent>
+              <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+                <Button
+                  size="small"
+                  variant="text"
+                  href={article.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ color: '#3f51b5', '&:hover': { textDecoration: 'underline' } }}
+                >
+                  Read More
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Free Hosting Providers Link */}
+      <Typography variant="h5" sx={{ mt: 6, mb: 3, fontWeight: 'bold', color: '#333' }}>
+        ☁️ Free Resources
+      </Typography>
+      <Paper elevation={4} sx={{ p: 3, mb: 4, borderRadius: '16px', background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)', color: 'white', textAlign: 'center' }}>
+        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
+          Looking for Free Hosting?
+        </Typography>
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          Discover a curated list of reliable free hosting providers for your projects.
+        </Typography>
         <Button
           variant="contained"
-          color="error"
-          onClick={logout}
+          onClick={() => navigate("/free-hosting")}
           sx={{
-            padding: '12px 30px',
-            borderRadius: '10px',
-            fontSize: '1rem'
+            backgroundColor: 'white',
+            color: '#2196F3',
+            '&:hover': { backgroundColor: '#e0f2f7' },
+            borderRadius: '8px',
+            padding: '10px 25px',
+            fontWeight: 'bold'
           }}
         >
-          🚪 Logout
+          View Free Hosting List
         </Button>
-      </Box>
+      </Paper>
+
+
+      {/* Logout Button - Only show if logged in */}
+      {user && (
+        <Box mt={6} sx={{ textAlign: 'center' }}>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={logout}
+            sx={{
+              padding: '12px 30px',
+              borderRadius: '10px',
+              fontSize: '1rem'
+            }}
+          >
+            🚪 Logout
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };
