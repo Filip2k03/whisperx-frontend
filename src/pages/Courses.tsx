@@ -8,6 +8,7 @@ import {
   Tab,
   CircularProgress,
 } from "@mui/material";
+import { toast } from "react-toastify";
 import API from "../api/api";
 
 const courseCategories = ["All", "HTML", "CSS", "JavaScript", "React", "Python", "PHP"];
@@ -37,11 +38,7 @@ const Courses = () => {
   const handleTabChange = (_: any, newValue: number) => {
     setTab(newValue);
     const cat = courseCategories[newValue];
-    if (cat === "All") {
-      setFiltered(courses);
-    } else {
-      setFiltered(courses.filter((c: any) => c.category === cat));
-    }
+    setFiltered(cat === "All" ? courses : courses.filter((c: any) => c.category === cat));
   };
 
   const refreshPoints = () => {
@@ -52,6 +49,30 @@ const Courses = () => {
         setUser(data);
         localStorage.setItem("user", JSON.stringify(data));
       });
+  };
+
+  const handleDownloadCourse = async (course: any) => {
+    if (user.points < course.points_required) {
+      toast.error("Not enough points to download this course.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/view_course.php?id=${course.id}&user_id=${user.id}`);
+      const data = await res.json();
+
+      if (data.success) {
+        window.open(course.pdf_link, "_blank");
+
+        const updatedUser = { ...user, points: data.new_points };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      } else {
+        toast.error(data.error || "Something went wrong.");
+      }
+    } catch (err) {
+      toast.error("Failed to download course.");
+    }
   };
 
   return (
@@ -77,14 +98,13 @@ const Courses = () => {
         filtered.map((course: any) => (
           <Paper key={course.id} sx={{ p: 2, my: 2 }}>
             <Typography variant="h6">{course.title}</Typography>
-            <Typography variant="body2" sx={{ color: "gray" }}>
-              {course.category}
-            </Typography>
+            <Typography variant="body2" sx={{ color: "gray" }}>{course.category}</Typography>
             <Typography variant="body1">{course.description}</Typography>
             <Typography>Required Points: {course.points_required}</Typography>
+
             {user.points >= course.points_required ? (
-              <Button variant="contained" href={course.pdf_link} target="_blank">
-                Download PDF
+              <Button variant="contained" onClick={() => handleDownloadCourse(course)}>
+                Download PDF ({course.points_required} pts)
               </Button>
             ) : (
               <Typography color="error">Not enough points</Typography>

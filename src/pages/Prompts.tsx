@@ -1,130 +1,81 @@
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Paper,
-  TextField,
-  MenuItem,
-  Button,
-} from "@mui/material";
-import API from "../api/api";
-import { toast } from "react-toastify";
+import { Button } from "@mui/material";
+import toast from "react-hot-toast";
 
-const promptCategories = ["All", "ChatGPT", "DALL·E", "MidJourney", "Claude", "Copilot"];
+interface Prompt {
+  id: number;
+  title: string;
+  points_required: number;
+  pdf_link: string;
+}
 
 const Prompts = () => {
-  const [prompts, setPrompts] = useState<any[]>([]);
-  const [filtered, setFiltered] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [user, setUser] = useState<any>(JSON.parse(localStorage.getItem("user") || "{}"));
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [user, setUser] = useState<any>({});
+  const [purchasedPrompts, setPurchasedPrompts] = useState<number[]>([]);
 
-  // Fetch all prompts on load
   useEffect(() => {
-    fetch(`${API}/get_prompts.php`)
-      .then((res) => res.json())
-      .then((data) => {
-        setPrompts(data);
-        setFiltered(data);
-      });
+    const u = JSON.parse(localStorage.getItem("user") || "{}");
+    setUser(u);
+    fetchPrompts();
+    fetchPurchasedPrompts(u.id);
   }, []);
 
-  // Filter by search and category
-  useEffect(() => {
-    let results = prompts;
-    if (category !== "All") {
-      results = results.filter((p) => p.category === category);
-    }
-    if (search) {
-      results = results.filter((p) =>
-        p.title.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    setFiltered(results);
-  }, [search, category, prompts]);
+  const fetchPrompts = async () => {
+    const res = await fetch(`${API}/get_prompts.php`);
+    const data = await res.json();
+    setPrompts(data);
+  };
 
-  // Handle viewing a prompt
-  const handleViewPrompt = async (promptId: number) => {
-    try {
-      const res = await fetch(`${API}/view_prompt.php?id=${promptId}`);
-      const data = await res.json();
+  const fetchPurchasedPrompts = async (userId: number) => {
+    const res = await fetch(`${API}/get_purchased_prompts.php?user_id=${userId}`);
+    const data = await res.json();
+    setPurchasedPrompts(data.map((item: any) => item.prompt_id));
+  };
 
-      if (data.success) {
-        // Open PDF
-        window.open(`${API}/${data.pdf_link}`, "_blank");
+  const handleBuyPrompt = async (prompt: Prompt) => {
+    if (user.points < prompt.points_required) return toast.error("Not enough points.");
 
-        // Update user points in localStorage and state
-        const updatedUser = { ...user, points: data.new_points };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      } else {
-        toast.error(data.error || "Not enough points.");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to view prompt.");
-    }
+    const res = await fetch(`${API}/buy_prompt.php`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt_id: prompt.id, user_id: user.id }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      toast.success("Prompt unlocked!");
+      setPurchasedPrompts([...purchasedPrompts, prompt.id]);
+      const updatedUser = { ...user, points: data.new_points };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    } else toast.error(data.error);
   };
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h4" mb={2}>
-        AI Prompt Library
-      </Typography>
-
-      <Box display="flex" gap={2} mb={3}>
-        <TextField
-          label="Search"
-          fullWidth
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <TextField
-          label="Category"
-          select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          sx={{ width: "200px" }}
-        >
-          {promptCategories.map((cat) => (
-            <MenuItem key={cat} value={cat}>
-              {cat}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Box>
-
-      <Typography variant="subtitle1" mb={2}>
-        Your Points: {user.points}
-      </Typography>
-
-      {filtered.map((p) => (
-        <Paper key={p.id} sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6">{p.title}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {p.category}
-          </Typography>
-          <Typography variant="body1">Points Required: {p.points_required}</Typography>
-
-          {p.points_required === 0 ? (
+    <div>
+      <h1>Prompts</h1>
+      {prompts.map((p) => (
+        <div key={p.id}>
+          <h3>{p.title}</h3>
+          {purchasedPrompts.includes(p.id) ? (
             <Button
-              variant="outlined"
-              onClick={() => window.open(`${API}/${p.pdf_link}`, "_blank")}
+              onClick={() => {
+                window.open(`${API}/${p.pdf_link}`, "_blank");
+                window.open(
+                  "https://admin.z267312-o74cz.ls01.zwhhosting.com/uploads/prompts/prompt_6839d13f12571.pdf",
+                  "_blank"
+                );
+              }}
             >
-              View Free Prompt
-            </Button>
-          ) : user.points >= p.points_required ? (
-            <Button variant="contained" color="primary" onClick={() => handleViewPrompt(p.id)}>
-              Use {p.points_required} Points
+              View Prompt
             </Button>
           ) : (
-            <Typography color="error" mt={1}>
-              Not enough points to view this prompt.
-            </Typography>
+            <Button onClick={() => handleBuyPrompt(p)}>Buy ({p.points_required} pts)</Button>
           )}
-        </Paper>
+        </div>
       ))}
-    </Box>
+    </div>
   );
 };
 
