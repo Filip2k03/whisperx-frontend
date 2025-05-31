@@ -12,7 +12,7 @@ import {
   Typography,
   Button,
   ListItemIcon,
-  useTheme, // Import useTheme hook
+  useTheme,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -25,7 +25,6 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-// Import the ThemeToggle component
 import { ThemeToggle } from "../theme/ThemeToggle"; // Make sure this path is correct relative to Layout.tsx
 
 const drawerWidth = 240;
@@ -68,9 +67,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <List>
         {navItems.map((item) => (
           <ListItem
-            button
             key={item.label}
             onClick={() => navigate(item.path)}
+            component="button" // <--- FIX: Explicitly set component to "button"
             sx={{
               '&:hover': {
                 backgroundColor: theme.palette.action.hover,
@@ -84,7 +83,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <ListItemText primary={item.label} sx={{ color: isActive(item.path) ? theme.palette.primary.main : theme.palette.text.primary }} />
           </ListItem>
         ))}
-        <ListItem button onClick={logout} sx={{ '&:hover': { backgroundColor: theme.palette.action.hover } }}>
+        <ListItem
+          onClick={logout}
+          component="button" // <--- FIX: Explicitly set component to "button"
+          sx={{ '&:hover': { backgroundColor: theme.palette.action.hover } }}
+        >
           <ListItemIcon><LogoutIcon sx={{ color: theme.palette.error.main }} /></ListItemIcon>
           <ListItemText primary="Logout" sx={{ color: theme.palette.error.main }} />
         </ListItem>
@@ -156,7 +159,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </Button>
             ))}
             {/* Theme Toggle Button */}
-            <ThemeToggle /> {/* Placed right before logout for good visibility */}
+            <ThemeToggle />
             <Button
               onClick={logout}
               sx={{
