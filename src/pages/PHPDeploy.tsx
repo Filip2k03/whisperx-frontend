@@ -1,6 +1,6 @@
 import { Box, Typography, Button, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { FilePhp } from 'lucide-react'; // Import PHP icon
+import { FileCode } from 'lucide-react'; // Changed from FilePhp to FileCode
 
 const PHPDeploy = () => {
   const navigate = useNavigate();
@@ -8,7 +8,7 @@ const PHPDeploy = () => {
     <Box sx={{ p: 4, maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: '16px' }}>
         <Box sx={{ mb: 2, color: '#777BB4' }}>
-          <FilePhp size={60} />
+          <FileCode size={60} /> {/* Using FileCode icon as a generic representation for PHP code */}
         </Box>
         <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#333' }}>
           Deploy PHP Applications

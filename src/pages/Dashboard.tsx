@@ -8,7 +8,8 @@ import {
   Card,
   CardContent,
   CardActions,
-  Link as MuiLink, // Alias Link to avoid conflict with react-router-dom Link if imported
+  Link as MuiLink,
+  CircularProgress, // Import CircularProgress for loading indicator
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import API from "../api/api";
@@ -103,6 +104,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const [user, setUser] = useState<User | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true); // State to track user data loading
   const [currentBuzzwordIndex, setCurrentBuzzwordIndex] = useState(0);
 
   // Effect for the trending AI buzzwords rotator
@@ -115,37 +117,43 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Effect to load user from localStorage on component mount
-  useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      const parsedUser = JSON.parse(stored);
-      setUser(parsedUser);
-      // Fetch fresh user data if logged in
-      fetchUser(parsedUser.id);
-    } else {
-      setUser(null); // Ensure user is null if not logged in
-    }
-  }, []);
-
-  // Function to fetch user data (only if user ID is provided)
+  // Function to fetch user data from the server
   const fetchUser = async (userId: string) => {
+    setIsLoadingUser(true); // Start loading when fetching user data
     try {
       const res = await fetch(`${API}/get_user.php?id=${userId}`);
       const data = await res.json();
       if (!data.error) {
         setUser(data);
-        localStorage.setItem("user", JSON.stringify(data)); // Refresh local storage
+        localStorage.setItem("user", JSON.stringify(data)); // Refresh local storage with latest data
       } else {
         toast.showToast(data.error, "error");
-        localStorage.removeItem("user");
-        setUser(null);
+        localStorage.removeItem("user"); // Clear invalid user from local storage
+        setUser(null); // Set user to null if server returns an error
       }
     } catch (error) {
       console.error("Failed to fetch user data:", error);
       toast.showToast("Failed to load user data.", "error");
+      localStorage.removeItem("user"); // Clear local storage on network error
+      setUser(null); // Set user to null on network error
+    } finally {
+      setIsLoadingUser(false); // Stop loading regardless of success or failure
     }
   };
+
+  // Effect to load user from localStorage on component mount
+  // This ensures the dashboard always tries to get the latest user state
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      const parsedUser = JSON.parse(stored);
+      setUser(parsedUser); // Set user state immediately for initial render
+      fetchUser(parsedUser.id); // Then fetch fresh data from server
+    } else {
+      setUser(null); // No user found in local storage
+      setIsLoadingUser(false); // Not loading if no user to fetch
+    }
+  }, []); // Empty dependency array: runs once on mount
 
   const logout = () => {
     localStorage.removeItem("user");
@@ -153,6 +161,18 @@ const Dashboard = () => {
     navigate("/login");
     toast.showToast("Logged out successfully", "info");
   };
+
+  // Display loading indicator if user data is still being fetched
+  if (isLoadingUser && user === null) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+        <CircularProgress size={60} sx={{ color: '#1976d2' }} />
+        <Typography variant="h6" sx={{ mt: 3, color: 'text.secondary' }}>
+          Loading your dashboard...
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 4, maxWidth: 1200, margin: '0 auto' }}>
@@ -174,12 +194,11 @@ const Dashboard = () => {
                 '0%': { transform: 'translateY(100%)', opacity: 0 },
                 '100%': { transform: 'translateY(0)', opacity: 1 },
               },
-              // Reset animation on index change to re-trigger
               animationIterationCount: 1,
               animationFillMode: 'forwards',
-              animationName: currentBuzzwordIndex !== 0 ? 'slide-up' : 'none', // Only animate after first render
+              animationName: currentBuzzwordIndex !== 0 ? 'slide-up' : 'none',
             }}
-            key={currentBuzzwordIndex} // Key change forces re-render and animation
+            key={currentBuzzwordIndex}
           >
             {trendingAiBuzzwords[currentBuzzwordIndex]}
           </Typography>

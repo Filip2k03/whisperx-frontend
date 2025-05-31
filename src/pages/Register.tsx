@@ -4,12 +4,18 @@ import {
   TextField,
   Button,
   Paper,
+  InputAdornment, // Import InputAdornment
+  IconButton,     // Import IconButton
 } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 import { useToast } from "../components/ToastProvider";
-import { ThemeToggle } from "../theme/ThemeToggle";
+// import { ThemeToggle } from "../theme/ThemeToggle"; // ThemeToggle is now in Layout.tsx
+
+// Import icons for password visibility toggle
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -21,6 +27,12 @@ const Register = () => {
     username: "",
     birthday: "",
   });
+  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
 
   const getPasswordStrength = (pass: string) => {
     if (pass.length < 6) return "Weak";
@@ -39,7 +51,7 @@ const Register = () => {
     }
 
     if (getPasswordStrength(form.password) === "Weak") {
-      toast.showToast("Password is too weak", "warning");
+      toast.showToast("Password is too weak. Please use at least 8 characters, including uppercase letters and numbers.", "warning");
       return;
     }
 
@@ -52,13 +64,14 @@ const Register = () => {
       const data = await res.json();
 
       if (data.status === "pending") {
-        toast.showToast("Check your email to verify account", "success");
+        toast.showToast("Registration successful! Check your email to verify account.", "success");
         navigate("/login");
       } else {
-        toast.showToast(data.message || "Failed to register", "error");
+        toast.showToast(data.message || "Failed to register.", "error");
       }
-    } catch {
-      toast.showToast("Something went wrong!", "error");
+    } catch (err) {
+      console.error("Registration failed:", err);
+      toast.showToast("Something went wrong! Check your connection.", "error");
     }
   };
 
@@ -74,27 +87,58 @@ const Register = () => {
         p: 2,
       }}
     >
-      <Paper sx={{ p: 4, width: "100%", maxWidth: 420 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h5">Create your account ✨</Typography>
-          <ThemeToggle />
+      <Paper
+        elevation={6} // Added more elevation for a nicer look
+        sx={{
+          p: 4,
+          width: "100%",
+          maxWidth: 420,
+          borderRadius: '16px', // Rounded corners
+          boxShadow: '0 8px 25px rgba(0,0,0,0.15)', // Enhanced shadow
+        }}
+      >
+        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+            Create your account ✨
+          </Typography>
+          {/* ThemeToggle is now in Layout.tsx, remove from here */}
+          {/* <ThemeToggle /> */}
         </Box>
 
         <TextField
           label="Email"
+          type="email"
           fullWidth
           margin="normal"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
+          variant="outlined"
+          sx={{ mb: 2 }}
         />
 
         <TextField
           label="Password"
-          type="password"
+          type={showPassword ? 'text' : 'password'} // Toggle type based on state
           fullWidth
           margin="normal"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
+          variant="outlined"
+          sx={{ mb: 1 }} // Reduced margin as strength text is below
+          InputProps={{ // Add InputProps for the adornment
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={handleClickShowPassword}
+                  onMouseDown={handleMouseDownPassword}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
         {form.password && (
           <Typography
@@ -102,10 +146,12 @@ const Register = () => {
             sx={{
               color:
                 getPasswordStrength(form.password) === "Strong"
-                  ? "green"
+                  ? "success.main" // Use theme colors
                   : getPasswordStrength(form.password) === "Medium"
-                  ? "orange"
-                  : "red",
+                  ? "warning.main" // Use theme colors
+                  : "error.main", // Use theme colors
+              display: 'block', // Ensure it's on its own line
+              mb: 2, // Add margin bottom
             }}
           >
             Strength: {getPasswordStrength(form.password)}
@@ -118,6 +164,8 @@ const Register = () => {
           margin="normal"
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
+          variant="outlined"
+          sx={{ mb: 2 }}
         />
 
         <TextField
@@ -128,18 +176,40 @@ const Register = () => {
           InputLabelProps={{ shrink: true }}
           value={form.birthday}
           onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+          variant="outlined"
+          sx={{ mb: 3 }}
         />
 
         <Button
           variant="contained"
           fullWidth
-          sx={{ mt: 2 }}
+          sx={{
+            mt: 2,
+            py: 1.5,
+            fontSize: '1rem',
+            borderRadius: '10px',
+            backgroundColor: 'primary.main',
+            '&:hover': {
+              backgroundColor: 'primary.dark',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            },
+          }}
           onClick={handleRegister}
         >
           Register
         </Button>
 
-        <Button onClick={() => navigate("/login")} sx={{ mt: 1 }}>
+        <Button
+          onClick={() => navigate("/login")}
+          sx={{
+            mt: 2,
+            textTransform: 'none',
+            color: 'text.secondary',
+            '&:hover': {
+              textDecoration: 'underline',
+            },
+          }}
+        >
           Already have an account? Login →
         </Button>
       </Paper>

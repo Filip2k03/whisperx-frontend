@@ -9,7 +9,6 @@ import {
   Paper,
   TextField,
   MenuItem,
-  Link as MuiLink,
   Chip, // For displaying features as chips
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -18,18 +17,12 @@ import {
   Server, // General hosting icon
   Code,   // General code icon
   Cloud,  // Cloud icon
-  FileCode, // For specific languages
+  FileCode, // For specific languages (used for Static, PHP, and now Python)
   HardDrive, // Disk space
   Globe, // Custom domains
-  ShieldCheck, // SSL
-  Database, // MySQL
-  Mail, // Email
-  Cpu, // Serverless
-  GitFork, // Version Control
   Play, // Deployment
-  Python, // Python icon
   SquareTerminal, // Node.js icon (or use custom SVG)
-  FilePhp, // PHP icon
+  
 } from 'lucide-react'; // Import icons from lucide-react
 
 interface HostingProvider {
@@ -52,9 +45,9 @@ interface DeployOption {
 
 // Define specific deployment options
 const deployOptions: DeployOption[] = [
-  { id: "python", name: "Deploy Python", description: "Host your Python web applications and scripts.", path: "/free-hosting/python", icon: <Python size={40} /> },
+  { id: "python", name: "Deploy Python", description: "Host your Python web applications and scripts.", path: "/free-hosting/python", icon: <FileCode size={40} /> }, // Changed to FileCode
   { id: "nodejs", name: "Deploy Node.js", description: "Run Node.js backend services and full-stack apps.", path: "/free-hosting/node", icon: <SquareTerminal size={40} /> },
-  { id: "php", name: "Deploy PHP", description: "Host traditional PHP websites and applications.", path: "/free-hosting/php", icon: <FilePhp size={40} /> },
+  { id: "php", name: "Deploy PHP", description: "Host traditional PHP websites and applications.", path: "/free-hosting/php", icon: <FileCode size={40} /> },
   { id: "static", name: "Deploy Static Sites", description: "Host HTML, CSS, JS websites and single-page apps.", path: "/free-hosting/static", icon: <FileCode size={40} /> },
   // Add more as needed, e.g., Java, Ruby, Go, etc.
 ];
@@ -172,7 +165,7 @@ const freeHostingProviders: HostingProvider[] = [
   },
   {
     id: "hostinger-free",
-    name: "Hostinger (Free Hosting)",
+    name: "Hostinger (Free Hosting)", // 000webhost is part of Hostinger
     description: "Offers free web hosting through its 000webhost brand.",
     features: ["PHP", "MySQL", "Website Builder", "FTP"],
     deployLanguages: ["PHP"],

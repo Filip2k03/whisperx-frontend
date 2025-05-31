@@ -1,6 +1,6 @@
 import { Box, Typography, Button, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { Python } from 'lucide-react'; // Import Python icon
+import { FileCode } from 'lucide-react'; // Changed from Python to FileCode
 
 const PythonDeploy = () => {
   const navigate = useNavigate();
@@ -8,7 +8,7 @@ const PythonDeploy = () => {
     <Box sx={{ p: 4, maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: '16px' }}>
         <Box sx={{ mb: 2, color: '#3776AB' }}>
-          <Python size={60} />
+          <FileCode size={60} /> {/* Using FileCode icon */}
         </Box>
         <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#333' }}>
           Deploy Python Applications
