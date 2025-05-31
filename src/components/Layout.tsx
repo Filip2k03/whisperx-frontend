@@ -11,23 +11,38 @@ import {
   Toolbar,
   Typography,
   Button,
+  ListItemIcon,
+  useTheme, // Import useTheme hook
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import SchoolIcon from "@mui/icons-material/School";
+import TextSnippetIcon from "@mui/icons-material/TextSnippet";
+import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import DownloadIcon from "@mui/icons-material/Download";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+
+// Import the ThemeToggle component
+import { ThemeToggle } from "../theme/ThemeToggle"; // Make sure this path is correct relative to Layout.tsx
 
 const drawerWidth = 240;
 
 const navItems = [
-  { label: "Dashboard", path: "/dashboard" },
-  { label: "Courses", path: "/courses" },
-  { label: "Prompts", path: "/prompts" },
-  { label: "Buy Token", path: "/buy-token" },
-  { label: "Profile", path: "/profile" },
+  { label: "Dashboard", path: "/dashboard", icon: <DashboardIcon /> },
+  { label: "Courses", path: "/courses", icon: <SchoolIcon /> },
+  { label: "Prompts", path: "/prompts", icon: <TextSnippetIcon /> },
+  { label: "Downloads", path: "/downloads", icon: <DownloadIcon /> },
+  { label: "Buy Token", path: "/buy-token", icon: <MonetizationOnIcon /> },
+  { label: "Profile", path: "/profile", icon: <AccountCircleIcon /> },
 ];
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const logout = () => {
@@ -35,20 +50,43 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     navigate("/login");
   };
 
+  const isActive = (path: string) => location.pathname === path;
+
   const drawer = (
     <Box onClick={() => setMobileOpen(false)} sx={{ textAlign: "center" }}>
-      <Typography variant="h6" sx={{ my: 2 }}>
+      <Typography
+        variant="h6"
+        sx={{
+          my: 2,
+          fontWeight: 'bold',
+          color: theme.palette.primary.main,
+        }}
+      >
         WhisperX
       </Typography>
       <Divider />
       <List>
         {navItems.map((item) => (
-          <ListItem button key={item.label} onClick={() => navigate(item.path)}>
-            <ListItemText primary={item.label} />
+          <ListItem
+            button
+            key={item.label}
+            onClick={() => navigate(item.path)}
+            sx={{
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+              },
+              backgroundColor: isActive(item.path)
+                ? theme.palette.action.selected
+                : 'inherit',
+            }}
+          >
+            {item.icon && <ListItemIcon sx={{ color: isActive(item.path) ? theme.palette.primary.main : theme.palette.text.secondary }}>{item.icon}</ListItemIcon>}
+            <ListItemText primary={item.label} sx={{ color: isActive(item.path) ? theme.palette.primary.main : theme.palette.text.primary }} />
           </ListItem>
         ))}
-        <ListItem button onClick={logout}>
-          <ListItemText primary="Logout" />
+        <ListItem button onClick={logout} sx={{ '&:hover': { backgroundColor: theme.palette.action.hover } }}>
+          <ListItemIcon><LogoutIcon sx={{ color: theme.palette.error.main }} /></ListItemIcon>
+          <ListItemText primary="Logout" sx={{ color: theme.palette.error.main }} />
         </ListItem>
       </List>
     </Box>
@@ -57,23 +95,106 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar component="nav">
-        <Toolbar>
-          <IconButton color="inherit" onClick={() => setMobileOpen(!mobileOpen)} edge="start" sx={{ mr: 2 }}>
+      <AppBar
+        component="nav"
+        position="fixed"
+        sx={{
+          backgroundColor: '#2c3e50',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          zIndex: theme.zIndex.drawer + 1,
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          {/* Hamburger Icon for Mobile */}
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            sx={{ mr: 2, display: { sm: "none" } }}
+          >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+
+          {/* App Name for Desktop */}
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              display: { xs: "none", sm: "block" },
+              fontWeight: 'bold',
+              letterSpacing: 1.2,
+              color: '#ffffff',
+              flexGrow: 1,
+            }}
+          >
             WhisperX
           </Typography>
-          <Box sx={{ display: { xs: "none", sm: "block" } }}>
+
+          {/* Navigation Buttons for Desktop */}
+          <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 1 }}>
             {navItems.map((item) => (
-              <Button key={item.label} sx={{ color: "#fff" }} onClick={() => navigate(item.path)}>
+              <Button
+                key={item.label}
+                onClick={() => navigate(item.path)}
+                sx={{
+                  color: '#ffffff',
+                  fontWeight: isActive(item.path) ? 'bold' : 'normal',
+                  borderBottom: isActive(item.path) ? '2px solid #fdbb2d' : 'none',
+                  borderRadius: 0,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderBottom: '2px solid #fdbb2d',
+                  },
+                  display: 'flex',
+                  alignItems: 'center',
+                  py: '12px',
+                  px: '16px'
+                }}
+              >
                 {item.label}
               </Button>
             ))}
-            <Button sx={{ color: "#fff" }} onClick={logout}>
+            {/* Theme Toggle Button */}
+            <ThemeToggle /> {/* Placed right before logout for good visibility */}
+            <Button
+              onClick={logout}
+              sx={{
+                color: '#fff',
+                backgroundColor: theme.palette.error.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.error.dark,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                },
+                borderRadius: '8px',
+                ml: 2,
+                py: '8px',
+                px: '20px'
+              }}
+            >
               Logout
             </Button>
+          </Box>
+
+          {/* App Name for Mobile (always visible when hamburger is not active) */}
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              flexGrow: 1,
+              display: { xs: "block", sm: "none" },
+              textAlign: "center",
+              fontWeight: 'bold',
+              color: '#ffffff',
+              ml: { xs: -6, sm: 0 },
+            }}
+          >
+            WhisperX
+          </Typography>
+
+          {/* Theme Toggle for Mobile - placed near hamburger or as part of app bar utilities */}
+          <Box sx={{ display: { xs: "block", sm: "none" } }}>
+             <ThemeToggle />
           </Box>
         </Toolbar>
       </AppBar>

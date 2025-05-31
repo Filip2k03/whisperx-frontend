@@ -1,8 +1,20 @@
+/* app.css */
+
 #root {
-  max-width: 1280px;
+  /* Centering and max-width for the main app content */
+  max-width: 1300px; /* Slightly wider max-width */
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  text-align: left; /* Changed to left for better content flow */
+  width: 100%; /* Ensure it takes full width up to max-width */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Responsive padding for smaller screens */
+@media (max-width: 768px) {
+  #root {
+    padding: 1rem;
+  }
 }
 
 .logo {
@@ -12,10 +24,10 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em var(--primary-color)); /* Use primary color for logo shadow */
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em #61dafbaa); /* Specific for React logo if you have one */
 }
 
 @keyframes logo-spin {
@@ -35,25 +47,37 @@
 
 .card {
   padding: 2em;
+  background-color: var(--card-background); /* Use card background variable */
+  border-radius: 12px; /* Nicer rounded corners */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* More pronounced shadow */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
 }
 
 .read-the-docs {
-  color: #888;
+  color: var(--text-color); /* Use general text color */
+  opacity: 0.7;
 }
 
+/* Ad container specific styles */
 .ad-container {
-  margin: 20px auto;
+  margin: 40px auto; /* More margin */
+  padding: 25px; /* More padding */
+  border: 1px solid var(--border-color);
+  background-color: var(--card-background); /* Use card background for ad container */
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  display: flex; /* Use flexbox for centering content */
+  justify-content: center;
+  align-items: center;
+  min-height: 100px; /* Ensure a minimum height for ads */
   text-align: center;
-  max-width: 100%;
-  background-color: #f0f0f0;
-  padding: 10px;
-  border: 1px solid #ddd;
 }
 
 /* Make ad responsive */
 @media (max-width: 768px) {
   .ad-container {
-    width: 100%;
+    width: 95%; /* Adjust width for smaller screens */
     height: auto;
+    padding: 15px;
   }
 }

@@ -1,118 +1,73 @@
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  Tabs,
-  Tab,
-  CircularProgress,
-} from "@mui/material";
-import { toast } from "react-toastify";
-import API from "../api/api";
+import { Button, Typography } from "@mui/material";
+import toast from "react-hot-toast";
 
-const courseCategories = ["All", "HTML", "CSS", "JavaScript", "React", "Python", "PHP"];
+const API = "https://api.z267312-o74cz.ls01.zwhhosting.com/";
+
+interface Course {
+  id: number;
+  title: string;
+  points_required: number;
+  pdf_link: string;
+}
 
 const Courses = () => {
-  const [courses, setCourses] = useState([]);
-  const [filtered, setFiltered] = useState([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [user, setUser] = useState<any>({});
-  const [tab, setTab] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [purchasedCourses, setPurchasedCourses] = useState<number[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    const u = JSON.parse(localStorage.getItem("user") || "{}");
+    setUser(u);
     fetchCourses();
+    fetchPurchasedCourses(u.id);
   }, []);
 
   const fetchCourses = async () => {
-    setLoading(true);
     const res = await fetch(`${API}/get_courses.php`);
     const data = await res.json();
     setCourses(data);
-    setFiltered(data);
-    setLoading(false);
   };
 
-  const handleTabChange = (_: any, newValue: number) => {
-    setTab(newValue);
-    const cat = courseCategories[newValue];
-    setFiltered(cat === "All" ? courses : courses.filter((c: any) => c.category === cat));
+  const fetchPurchasedCourses = async (userId: number) => {
+    const res = await fetch(`${API}/get_purchased_courses.php?user_id=${userId}`);
+    const data = await res.json();
+    setPurchasedCourses(data.map((item: any) => item.course_id));
   };
 
-  const refreshPoints = () => {
-    const u = JSON.parse(localStorage.getItem("user") || "{}");
-    fetch(`${API}/get_user.php?id=${u.id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setUser(data);
-        localStorage.setItem("user", JSON.stringify(data));
-      });
-  };
+  const handleBuyCourse = async (course: Course) => {
+    if (user.points < course.points_required) return toast.error("Not enough points.");
 
-  const handleDownloadCourse = async (course: any) => {
-    if (user.points < course.points_required) {
-      toast.error("Not enough points to download this course.");
-      return;
-    }
+    const res = await fetch(`${API}/buy_course.php`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ course_id: course.id, user_id: user.id }),
+    });
+    const data = await res.json();
 
-    try {
-      const res = await fetch(`${API}/view_course.php?id=${course.id}&user_id=${user.id}`);
-      const data = await res.json();
-
-      if (data.success) {
-        window.open(course.pdf_link, "_blank");
-
-        const updatedUser = { ...user, points: data.new_points };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      } else {
-        toast.error(data.error || "Something went wrong.");
-      }
-    } catch (err) {
-      toast.error("Failed to download course.");
-    }
+    if (data.success) {
+      toast.success("Course unlocked!");
+      setPurchasedCourses([...purchasedCourses, course.id]);
+      const updatedUser = { ...user, points: data.new_points };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    } else toast.error(data.error);
   };
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4">Available Courses</Typography>
-        <Button variant="outlined" onClick={refreshPoints}>
-          🔄 Refresh Points ({user?.points})
-        </Button>
-      </Box>
-
-      <Tabs value={tab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
-        {courseCategories.map((cat, index) => (
-          <Tab label={cat} key={index} />
-        ))}
-      </Tabs>
-
-      {loading ? (
-        <Box display="flex" justifyContent="center" mt={4}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        filtered.map((course: any) => (
-          <Paper key={course.id} sx={{ p: 2, my: 2 }}>
-            <Typography variant="h6">{course.title}</Typography>
-            <Typography variant="body2" sx={{ color: "gray" }}>{course.category}</Typography>
-            <Typography variant="body1">{course.description}</Typography>
-            <Typography>Required Points: {course.points_required}</Typography>
-
-            {user.points >= course.points_required ? (
-              <Button variant="contained" onClick={() => handleDownloadCourse(course)}>
-                Download PDF ({course.points_required} pts)
-              </Button>
-            ) : (
-              <Typography color="error">Not enough points</Typography>
-            )}
-          </Paper>
-        ))
-      )}
-    </Box>
+    <div>
+      <h1>Courses</h1>
+      {courses.map((c) => (
+        <div key={c.id}>
+          <h3>{c.title}</h3>
+          {purchasedCourses.includes(c.id) ? (
+            <Button onClick={() => window.open(c.pdf_link, "_blank")}>Download Course</Button>
+          ) : (
+            <Button onClick={() => handleBuyCourse(c)}>Buy ({c.points_required} pts)</Button>
+          )}
+        </div>
+      ))}
+    </div>
   );
 };
 
