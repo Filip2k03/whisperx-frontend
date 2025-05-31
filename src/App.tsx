@@ -14,15 +14,15 @@ import FreeHosting from "./pages/FreeHosting";
 import PythonDeploy from "./pages/PythonDeploy";
 import NodeDeploy from "./pages/NodeDeploy";
 import PHPDeploy from "./pages/PHPDeploy";
-import Layout from "./components/Layout";
+import Layout from "./components/Layout"; // Layout will wrap the entire application
 import ProtectedLayout from "./components/ProtectedLayout"; // Still used for individual route protection
 import "./App.css";
 
 function App() {
   return (
-    <Layout> {/* Layout now wraps the entire application */}
+    <Layout> {/* Layout now wraps the entire application, providing header/sidebar */}
       <Routes>
-        {/* Authentication Routes (no Layout or ProtectedLayout needed here) */}
+        {/* Authentication Routes - No protection needed here */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
@@ -35,7 +35,7 @@ function App() {
         <Route path="/free-hosting/php" element={<PHPDeploy />} />
 
         {/* Protected Routes - These routes require authentication.
-            They are individually wrapped by ProtectedLayout. */}
+            Each protected component is individually wrapped by ProtectedLayout. */}
         <Route path="/courses" element={<ProtectedLayout><Courses /></ProtectedLayout>} />
         <Route path="/prompts" element={<ProtectedLayout><Prompts /></ProtectedLayout>} />
         <Route path="/buy-token" element={<ProtectedLayout><BuyToken /></ProtectedLayout>} />
@@ -45,7 +45,7 @@ function App() {
         <Route path="/ai-video" element={<ProtectedLayout><AiVideo /></ProtectedLayout>} />
         <Route path="/ai-music" element={<ProtectedLayout><AiMusic /></ProtectedLayout>} />
 
-        {/* Optional: Fallback route for any unmatched paths */}
+        {/* Optional: Fallback route for any unmatched paths (e.g., a 404 page) */}
         {/* <Route path="*" element={<NotFoundPage />} /> */}
       </Routes>
     </Layout>
