@@ -9,51 +9,61 @@ import {
   CardActions,
   Link as MuiLink,
   CircularProgress,
+  Divider, // Ensure Divider is imported
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import API from "../api/api";
+import API from "../api/api"; // Assuming your API base URL is defined here
 import { useNavigate } from "react-router-dom";
-import { useToast } from "../components/ToastProvider";
+import { useToast } from "../components/ToastProvider"; // Assuming you have a ToastProvider
 import { Github } from 'lucide-react'; // Import Github icon
 
+// Define the interface for a single community GitHub link object
 interface CommunityGithubLink {
   id: string;
   project_name: string;
   github_url: string;
   created_at: string;
-  username: string; // Added to show who uploaded it
+  username: string;
 }
 
 const CommunityGithubProjects = () => {
   const navigate = useNavigate();
-  const toast = useToast();
+  const toast = useToast(); // Initialize the toast hook
   const [communityLinks, setCommunityLinks] = useState<CommunityGithubLink[]>([]);
   const [isLoadingCommunityLinks, setIsLoadingCommunityLinks] = useState(true);
 
-  // Function to fetch all GitHub links
+  // Function to fetch all GitHub links from the API
   const fetchAllGithubLinks = async () => {
-    setIsLoadingCommunityLinks(true);
+    setIsLoadingCommunityLinks(true); // Set loading state to true before fetching
     try {
       const res = await fetch(`${API}/get_all_github_links.php`);
-      const data = await res.json();
+      // Check if the response is OK (status code 200)
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json(); // Parse the JSON response
+      
       if (data.status === "success") {
-        setCommunityLinks(data.links);
+        setCommunityLinks(data.links); // Set the received links to state
       } else {
+        // Show an error toast if the API returns a 'fail' status
         toast.showToast(data.message || "Failed to load community GitHub links.", "error");
-        setCommunityLinks([]);
+        setCommunityLinks([]); // Clear links on failure
       }
     } catch (error) {
       console.error("Failed to fetch community GitHub links:", error);
-      toast.showToast("Failed to load community GitHub links due to network error.", "error");
-      setCommunityLinks([]);
+      // Show an error toast for network or parsing errors
+      toast.showToast("Failed to load community GitHub links due to network error or invalid response.", "error");
+      setCommunityLinks([]); // Clear links on error
     } finally {
-      setIsLoadingCommunityLinks(false);
+      setIsLoadingCommunityLinks(false); // Set loading state to false after fetch attempt
     }
   };
 
+  // Fetch links when the component mounts
   useEffect(() => {
     fetchAllGithubLinks();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   return (
     <Box sx={{ p: 4, maxWidth: 1200, margin: '0 auto' }}>
@@ -68,13 +78,15 @@ const CommunityGithubProjects = () => {
         <Divider sx={{ my: 2 }} />
 
         {isLoadingCommunityLinks ? (
+          // Display a loading spinner while data is being fetched
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
           </Box>
         ) : communityLinks.length > 0 ? (
+          // If there are links, display them in a responsive grid
           <Grid container spacing={3}>
             {communityLinks.map((link) => (
-              <Grid xs={12} sm={6} md={4} key={link.id}>
+              <Grid item xs={12} sm={6} md={4} key={link.id}> {/* Changed xs={12} to item xs={12} for Grid item */}
                 <Card elevation={1} sx={{ borderRadius: '8px', p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
                   <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
                     <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 0.5 }}>{link.project_name}</Typography>
@@ -111,6 +123,7 @@ const CommunityGithubProjects = () => {
             ))}
           </Grid>
         ) : (
+          // If no links are found after loading, display a message
           <Typography variant="body2" color="text.secondary">
             No community GitHub projects shared yet. Be the first to add one!
           </Typography>
