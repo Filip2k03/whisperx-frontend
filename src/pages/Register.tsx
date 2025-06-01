@@ -4,18 +4,15 @@ import {
   TextField,
   Button,
   Paper,
-  InputAdornment, // Import InputAdornment
-  IconButton,     // Import IconButton
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 import { useToast } from "../components/ToastProvider";
-// import { ThemeToggle } from "../theme/ThemeToggle"; // ThemeToggle is now in Layout.tsx
-
-// Import icons for password visibility toggle
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -27,12 +24,16 @@ const Register = () => {
     username: "",
     birthday: "",
   });
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
 
-  const handleClickShowPassword = () => setShowPassword((show) => !show);
-  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => setShowPassword((prev) => !prev);
+  const handleMouseDownPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
   };
+
+  const isEmailValid = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const getPasswordStrength = (pass: string) => {
     if (pass.length < 6) return "Weak";
@@ -41,37 +42,41 @@ const Register = () => {
     return "Medium";
   };
 
-  const isEmailValid = (email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
   const handleRegister = async () => {
     if (!isEmailValid(form.email)) {
-      toast.showToast("Invalid email format", "error");
+      toast.showToast("❌ Invalid email format", "error");
       return;
     }
 
     if (getPasswordStrength(form.password) === "Weak") {
-      toast.showToast("Password is too weak. Please use at least 8 characters, including uppercase letters and numbers.", "warning");
+      toast.showToast(
+        "⚠️ Weak password. Use 8+ characters, mix upper/lowercase & numbers.",
+        "warning"
+      );
       return;
     }
 
     try {
-      const res = await fetch(`${API}/register.php`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch(
+        "https://api.z267312-o74cz.ls01.zwhhosting.com/register.php", // <-- use your API
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        }
+      );
+
       const data = await res.json();
 
-      if (data.status === "pending") {
-        toast.showToast("Registration successful! Check your email to verify account.", "success");
+      if (data.status === "success") {
+        toast.showToast(data.message || "✅ Registered successfully!", "success");
         navigate("/login");
       } else {
-        toast.showToast(data.message || "Failed to register.", "error");
+        toast.showToast(data.message || "Registration failed.", "error");
       }
     } catch (err) {
-      console.error("Registration failed:", err);
-      toast.showToast("Something went wrong! Check your connection.", "error");
+      console.error("Error during registration:", err);
+      toast.showToast("🚫 Server error. Try again later.", "error");
     }
   };
 
@@ -88,23 +93,23 @@ const Register = () => {
       }}
     >
       <Paper
-        elevation={6} // Added more elevation for a nicer look
+        elevation={6}
         sx={{
           p: 4,
           width: "100%",
           maxWidth: 420,
-          borderRadius: '16px', // Rounded corners
-          boxShadow: '0 8px 25px rgba(0,0,0,0.15)', // Enhanced shadow
+          borderRadius: "16px",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-            Create your account ✨
-          </Typography>
-          {/* ThemeToggle is now in Layout.tsx, remove from here */}
-          {/* <ThemeToggle /> */}
-        </Box>
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: "bold", mb: 3, color: "primary.main" }}
+        >
+          Create your account ✨
+        </Typography>
 
+        {/* Email */}
         <TextField
           label="Email"
           type="email"
@@ -113,26 +118,23 @@ const Register = () => {
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           variant="outlined"
-          sx={{ mb: 2 }}
         />
 
+        {/* Password */}
         <TextField
           label="Password"
-          type={showPassword ? 'text' : 'password'} // Toggle type based on state
+          type={showPassword ? "text" : "password"}
           fullWidth
           margin="normal"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           variant="outlined"
-          sx={{ mb: 1 }} // Reduced margin as strength text is below
-          InputProps={{ // Add InputProps for the adornment
+          InputProps={{
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
-                  aria-label="toggle password visibility"
                   onClick={handleClickShowPassword}
                   onMouseDown={handleMouseDownPassword}
-                  edge="end"
                 >
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
@@ -140,24 +142,25 @@ const Register = () => {
             ),
           }}
         />
+
         {form.password && (
           <Typography
             variant="caption"
             sx={{
+              mt: 1,
               color:
                 getPasswordStrength(form.password) === "Strong"
-                  ? "success.main" // Use theme colors
+                  ? "success.main"
                   : getPasswordStrength(form.password) === "Medium"
-                  ? "warning.main" // Use theme colors
-                  : "error.main", // Use theme colors
-              display: 'block', // Ensure it's on its own line
-              mb: 2, // Add margin bottom
+                  ? "warning.main"
+                  : "error.main",
             }}
           >
             Strength: {getPasswordStrength(form.password)}
           </Typography>
         )}
 
+        {/* Username */}
         <TextField
           label="Username"
           fullWidth
@@ -165,9 +168,9 @@ const Register = () => {
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
           variant="outlined"
-          sx={{ mb: 2 }}
         />
 
+        {/* Birthday */}
         <TextField
           label="Birthday"
           type="date"
@@ -177,22 +180,17 @@ const Register = () => {
           value={form.birthday}
           onChange={(e) => setForm({ ...form, birthday: e.target.value })}
           variant="outlined"
-          sx={{ mb: 3 }}
+          sx={{ mb: 2 }}
         />
 
         <Button
-          variant="contained"
           fullWidth
+          variant="contained"
           sx={{
             mt: 2,
             py: 1.5,
-            fontSize: '1rem',
-            borderRadius: '10px',
-            backgroundColor: 'primary.main',
-            '&:hover': {
-              backgroundColor: 'primary.dark',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-            },
+            fontWeight: "bold",
+            borderRadius: "10px",
           }}
           onClick={handleRegister}
         >
@@ -203,11 +201,9 @@ const Register = () => {
           onClick={() => navigate("/login")}
           sx={{
             mt: 2,
-            textTransform: 'none',
-            color: 'text.secondary',
-            '&:hover': {
-              textDecoration: 'underline',
-            },
+            color: "text.secondary",
+            textTransform: "none",
+            "&:hover": { textDecoration: "underline" },
           }}
         >
           Already have an account? Login →
