@@ -30,7 +30,7 @@ const allAiTools: AiTool[] = [
   { id: "character-ai", name: "Character AI", description: "Create and chat with AI characters.", category: "Chat", link: "https://beta.character.ai/" },
   { id: "bard", name: "Bard (Legacy)", description: "Google's experimental conversational AI.", category: "Chat", link: "https://bard.google.com/" },
   { id: "you-chat", name: "YouChat", description: "AI assistant integrated with You.com search.", category: "Chat", link: "https://you.com/chat" },
-  { id: "bolt-ai-chat", name: "Bolt AI Chat", description: "Your custom or integrated Bolt AI solution.", category: "Chat", link: "/bolt-ai-chat" },
+  { id: "bolt-ai-chat", name: "Bolt AI Chat", description: "Your custom or integrated Bolt AI solution.", category: "Chat", link: "https://bolt.new/" },
   { id: "dall-e", name: "DALL·E", description: "Generates images from text prompts.", category: "Image", link: "https://openai.com/dall-e-2/" },
   { id: "midjourney", name: "Midjourney", description: "AI art generator for stunning visuals.", category: "Image", link: "https://www.midjourney.com/" },
   { id: "stable-diffusion", name: "Stable Diffusion", description: "Open-source text-to-image model.", category: "Image", link: "https://stability.ai/stable-diffusion/" },
