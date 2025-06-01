@@ -14,28 +14,30 @@ import FreeHosting from "./pages/FreeHosting";
 import PythonDeploy from "./pages/PythonDeploy";
 import NodeDeploy from "./pages/NodeDeploy";
 import PHPDeploy from "./pages/PHPDeploy";
-import Layout from "./components/Layout"; // Layout will wrap the entire application
-import ProtectedLayout from "./components/ProtectedLayout"; // Still used for individual route protection
+import MyGithubProjects from "./pages/MyGithubProjects"; // NEW: Import MyGithubProjects
+import CommunityGithubProjects from "./pages/CommunityGithubProjects"; // NEW: Import CommunityGithubProjects
+import Layout from "./components/Layout";
+import ProtectedLayout from "./components/ProtectedLayout";
 import "./App.css";
 
 function App() {
   return (
-    <Layout> {/* Layout now wraps the entire application, providing header/sidebar */}
+    <Layout>
       <Routes>
-        {/* Authentication Routes - No protection needed here */}
+        {/* Authentication Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* Public Routes - Accessible to everyone */}
-        <Route path="/" element={<Dashboard />} /> {/* Root path points to Dashboard */}
-        <Route path="/dashboard" element={<Dashboard />} /> {/* Explicit Dashboard route */}
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/free-hosting" element={<FreeHosting />} />
         <Route path="/free-hosting/python" element={<PythonDeploy />} />
         <Route path="/free-hosting/node" element={<NodeDeploy />} />
         <Route path="/free-hosting/php" element={<PHPDeploy />} />
+        <Route path="/community-github-projects" element={<CommunityGithubProjects />} /> {/* NEW: Public Community Projects */}
 
-        {/* Protected Routes - These routes require authentication.
-            Each protected component is individually wrapped by ProtectedLayout. */}
+        {/* Protected Routes - These routes require authentication. */}
         <Route path="/courses" element={<ProtectedLayout><Courses /></ProtectedLayout>} />
         <Route path="/prompts" element={<ProtectedLayout><Prompts /></ProtectedLayout>} />
         <Route path="/buy-token" element={<ProtectedLayout><BuyToken /></ProtectedLayout>} />
@@ -44,8 +46,9 @@ function App() {
         <Route path="/ai-chat" element={<ProtectedLayout><ChatAi /></ProtectedLayout>} />
         <Route path="/ai-video" element={<ProtectedLayout><AiVideo /></ProtectedLayout>} />
         <Route path="/ai-music" element={<ProtectedLayout><AiMusic /></ProtectedLayout>} />
+        <Route path="/my-github-projects" element={<ProtectedLayout><MyGithubProjects /></ProtectedLayout>} /> {/* NEW: Protected My Projects */}
 
-        {/* Optional: Fallback route for any unmatched paths (e.g., a 404 page) */}
+        {/* Optional: Fallback route */}
         {/* <Route path="*" element={<NotFoundPage />} /> */}
       </Routes>
     </Layout>

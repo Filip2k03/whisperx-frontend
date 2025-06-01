@@ -22,6 +22,7 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DownloadIcon from "@mui/icons-material/Download";
 import LogoutIcon from "@mui/icons-material/Logout";
+import GitHubIcon from '@mui/icons-material/GitHub'; // NEW: Import GitHub icon from MUI
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -36,6 +37,8 @@ const navItems = [
   { label: "Downloads", path: "/downloads", icon: <DownloadIcon /> },
   { label: "Buy Token", path: "/buy-token", icon: <MonetizationOnIcon /> },
   { label: "Profile", path: "/profile", icon: <AccountCircleIcon /> },
+  { label: "My GitHub Projects", path: "/my-github-projects", icon: <GitHubIcon /> }, // NEW: Added GitHub Projects
+  { label: "Community GitHub", path: "/community-github-projects", icon: <GitHubIcon /> }, // NEW: Added Community GitHub
 ];
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -69,7 +72,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <ListItem
             key={item.label}
             onClick={() => navigate(item.path)}
-            component="button" // <--- FIX: Explicitly set component to "button"
+            component="button"
             sx={{
               '&:hover': {
                 backgroundColor: theme.palette.action.hover,
@@ -85,7 +88,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         ))}
         <ListItem
           onClick={logout}
-          component="button" // <--- FIX: Explicitly set component to "button"
+          component="button"
           sx={{ '&:hover': { backgroundColor: theme.palette.action.hover } }}
         >
           <ListItemIcon><LogoutIcon sx={{ color: theme.palette.error.main }} /></ListItemIcon>
@@ -201,20 +204,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </Box>
         </Toolbar>
       </AppBar>
-      <Box component="nav">
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={() => setMobileOpen(false)}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
-      </Box>
       <Box component="main" sx={{ p: 3, width: "100%" }}>
         <Toolbar />
         {children}
