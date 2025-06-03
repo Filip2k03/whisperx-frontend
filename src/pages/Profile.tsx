@@ -125,6 +125,21 @@ const Profile = () => {
         <Typography variant="body1" sx={{ mb: 1 }}>
           <span style={{ fontWeight: 'bold' }}>Current Points:</span> {user.points}
         </Typography>
+
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          <span style={{ fontWeight: 'bold' }}>Account Type:</span>{" "}
+          {user.premium ? (
+            <span style={{ color: "#4CAF50", fontWeight: "bold" }}>Premium</span>
+          ) : (
+            <span style={{ color: "#999", fontWeight: "bold" }}>Free</span>
+          )}
+        </Typography>
+
+        <Typography variant="h4" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: '#333' }}>
+          My Profile {user.premium && <span style={{ fontSize: '16px', color: '#4CAF50' }}>🌟 Premium</span>}
+        </Typography>
+
+
         <TextField
           label="Username"
           value={form.username}
