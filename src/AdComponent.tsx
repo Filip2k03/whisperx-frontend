@@ -1,4 +1,5 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { CircularProgress, Box, Typography } from '@mui/material';
 
 const AdComponent = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,13 +17,20 @@ const AdComponent = () => {
   }, []);
 
   return (
-    <div className="ad-container">
+    <Box sx={{ textAlign: 'center', mt: 4 }}>
       {isLoading ? (
-        <p>Loading ad...</p>
+        <Box>
+          <CircularProgress />
+          <Typography variant="caption" display="block" mt={1}>
+            Loading sponsored content...
+          </Typography>
+        </Box>
       ) : (
-        <p>Ad is displayed here!</p>
+        <Typography variant="body2" color="text.secondary">
+          Advertisement displayed below 👇
+        </Typography>
       )}
-    </div>
+    </Box>
   );
 };
 
