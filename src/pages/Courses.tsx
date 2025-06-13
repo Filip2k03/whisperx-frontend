@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Typography } from "@mui/material";
 import toast from "react-hot-toast";
 
@@ -15,6 +15,7 @@ const Courses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [user, setUser] = useState<any>({});
   const [purchasedCourses, setPurchasedCourses] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem("user") || "{}");
@@ -27,6 +28,7 @@ const Courses = () => {
     const res = await fetch(`${API}/get_courses.php`);
     const data = await res.json();
     setCourses(data);
+    setLoading(false);
   };
 
   const fetchPurchasedCourses = async (userId: number) => {
@@ -53,6 +55,8 @@ const Courses = () => {
       setUser(updatedUser);
     } else toast.error(data.error);
   };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div>
