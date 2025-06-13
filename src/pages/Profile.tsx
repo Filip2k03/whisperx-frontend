@@ -75,33 +75,24 @@ const Profile = () => {
 
   // Fetch purchased courses
   useEffect(() => {
-    if (!user?.id) return; // Only fetch if user ID is available
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user.id) return;
 
-    const fetchCourses = async () => {
-      setLoadingCourses(true);
-      try {
-        const res = await fetch(`${API}/get_purches_course.php?user_id=${user.id}`);
-        const purchased = await res.json();
-
-        // Get all course details for purchased course_ids
-        if (purchased.length) {
-          const ids = purchased.map((c: any) => c.course_id).join(",");
-          const allCoursesRes = await fetch(`${API}/get_course.php`);
-          const allCourses = await allCoursesRes.json();
-          setCourses(allCourses.filter((c: Course) => purchased.some((p: any) => Number(p.course_id) === Number(c.id))));
-        } else {
-          setCourses([]);
-        }
-      } catch (err) {
-        console.error("Error fetching courses:", err);
-        toast.error("Failed to connect to the server to load courses.");
-      } finally {
-        setLoadingCourses(false);
-      }
-    };
-
-    fetchCourses();
-  }, [user]); // Re-fetch when user object changes (e.g., after login)
+    // Fetch purchased course IDs
+    fetch(`${API}/get_purches_course.php?user_id=${user.id}`)
+      .then(res => res.json())
+      .then((purchased) => {
+        const purchasedIds = purchased.map((c: any) => Number(c.course_id));
+        // Fetch all courses
+        fetch(`${API}/get_course.php`)
+          .then(res => res.json())
+          .then((allCourses) => {
+            // Filter only purchased courses
+            const userCourses = allCourses.filter((c: any) => purchasedIds.includes(Number(c.id)));
+            setCourses(userCourses);
+          });
+      });
+  }, []);
 
   // Handle profile update
   const updateProfile = async () => {
