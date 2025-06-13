@@ -28,14 +28,14 @@ const Courses = () => {
   }, []);
 
   const fetchCourses = async () => {
-    const res = await fetch(`${API}/get_courses.php`);
+    const res = await fetch(`${API}/get_course.php`);
     const data = await res.json();
     setCourses(data);
     setLoading(false);
   };
 
   const fetchPurchasedCourses = async (userId: number) => {
-    const res = await fetch(`${API}/get_purches_courses.php?user_id=${userId}`);
+    const res = await fetch(`${API}/get_purches_course.php?user_id=${userId}`);
     const data = await res.json();
     setPurchasedCourses(data.map((item: any) => Number(item.course_id)));
   };
