@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -30,6 +30,8 @@ const Profile = () => {
   const [form, setForm] = useState({ username: "", birthday: "" });
   const [userPrompts, setUserPrompts] = useState<UserPrompt[]>([]);
   const [loadingPrompts, setLoadingPrompts] = useState(true);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
   // Fetch user data from localStorage and navigate if not logged in
   useEffect(() => {
@@ -69,6 +71,36 @@ const Profile = () => {
     };
 
     fetchUserPrompts();
+  }, [user]); // Re-fetch when user object changes (e.g., after login)
+
+  // Fetch purchased courses
+  useEffect(() => {
+    if (!user?.id) return; // Only fetch if user ID is available
+
+    const fetchCourses = async () => {
+      setLoadingCourses(true);
+      try {
+        const res = await fetch(`${API}/get_purches_course.php?user_id=${user.id}`);
+        const purchased = await res.json();
+
+        // Get all course details for purchased course_ids
+        if (purchased.length) {
+          const ids = purchased.map((c: any) => c.course_id).join(",");
+          const allCoursesRes = await fetch(`${API}/get_course.php`);
+          const allCourses = await allCoursesRes.json();
+          setCourses(allCourses.filter((c: Course) => purchased.some((p: any) => Number(p.course_id) === Number(c.id))));
+        } else {
+          setCourses([]);
+        }
+      } catch (err) {
+        console.error("Error fetching courses:", err);
+        toast.error("Failed to connect to the server to load courses.");
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchCourses();
   }, [user]); // Re-fetch when user object changes (e.g., after login)
 
   // Handle profile update
@@ -236,6 +268,59 @@ const Profile = () => {
                 </List>
               </Box>
             )}
+          </Box>
+        )}
+      </Paper>
+
+      {/* Purchased Courses Section */}
+      <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: '12px' }}>
+        <Typography variant="h5" gutterBottom sx={{ mb: 2, color: '#555' }}>
+          My Purchased Courses
+        </Typography>
+
+        {loadingCourses ? (
+          <Typography>Loading your courses...</Typography>
+        ) : courses.length === 0 ? (
+          <Typography>You haven't purchased any courses yet.</Typography>
+        ) : (
+          <Box sx={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#2c3e50", color: "#fff" }}>
+                  <th style={{ padding: 8 }}>Title</th>
+                  <th style={{ padding: 8 }}>Points</th>
+                  <th style={{ padding: 8 }}>Download</th>
+                </tr>
+              </thead>
+              <tbody>
+                {courses.map((course) => {
+                  const ext = course.pdf_link.split('.').pop()?.toLowerCase();
+                  return (
+                    <tr key={course.id} style={{ background: "#f8f9fa" }}>
+                      <td style={{ padding: 8 }}>{course.title}</td>
+                      <td style={{ padding: 8 }}>{course.points_required}</td>
+                      <td style={{ padding: 8 }}>
+                        {ext === "zip" ? (
+                          <a href={course.pdf_link} target="_blank" rel="noopener noreferrer">
+                            <Button variant="contained" color="primary" size="small">
+                              🗜️ Download ZIP
+                            </Button>
+                          </a>
+                        ) : ext === "pdf" ? (
+                          <a href={course.pdf_link} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outlined" color="secondary" size="small">
+                              📄 View PDF
+                            </Button>
+                          </a>
+                        ) : (
+                          <span>Unknown</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </Box>
         )}
       </Paper>
